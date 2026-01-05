@@ -1,78 +1,70 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>PyFinance Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-    {% if current_user.is_authenticated %}
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h4>Hi, {{current_user.username}}</h4>
-            <a href="/logout">Logout</a>
-        </div>
-    {% endif %}
-    <h1>Expenses</h1>
-    <form action='/' method='POST'>
-        <label>Item: </label>
-        <input type="text" name="name" required>
-        <label>Price: </label>
-        <input type="number" step="any" min="0" name="price" required>
 
-        <button type="submit">Add Item</button>
-    </form>
-    <h1>Flow</h1>
-    <table>
-        <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-            <h4>Sort by:</h4>
-            <form action="/sort" method="GET" style="display: inline-block;">
+    <div class="container">
+        
+        {% if current_user.is_authenticated %}
+            <div class="header-bar">
+                <h4>Hi, {{current_user.username}}</h4>
+                <a href="/logout" style="color: #e74c3c;">Logout</a>
+            </div>
+        {% endif %}
 
+        <h1>Add Expense</h1>
+        <form action='/' method='POST'>
+            <label>Item Name:</label>
+            <input type="text" name="name" placeholder="e.g. Coffee" required>
+            
+            <label>Price ($):</label>
+            <input type="number" step="0.01" min="0" name="price" placeholder="0.00" required>
+
+            <button type="submit">Add Item</button>
+        </form>
+
+        <h1 style="margin-top: 40px;">History Flow</h1>
+
+        <div class="sort-section">
+            <span style="font-weight: bold;">Sort by:</span>
+            <form action="/sort" method="GET">
                 <select name="sort" onchange="this.form.submit()">
-                    <option value="time_asc" {% if sort_type=='time_asc' %}selected{% endif %}>
-                        Oldest First
-                    </option>
-
-                    <option value="time_desc" {% if sort_type=='time_desc' %}selected{% endif %}>
-                        Newest First
-                    </option>
-
-                    <option value="price_lo_hi" {% if sort_type=='price_lo_hi' %}selected{% endif %}>
-                        Price low to high
-                    </option>
-
-                    <option value="price_hi_lo" {% if sort_type=='price_hi_lo' %}selected{% endif %}>
-                        Price high to low
-                    </option>
-
+                    <option value="time_desc" {% if sort_type=='time_desc' %}selected{% endif %}>Newest First</option>
+                    <option value="time_asc" {% if sort_type=='time_asc' %}selected{% endif %}>Oldest First</option>
+                    <option value="price_lo_hi" {% if sort_type=='price_lo_hi' %}selected{% endif %}>Price low to high</option>
+                    <option value="price_hi_lo" {% if sort_type=='price_hi_lo' %}selected{% endif %}>Price high to low</option>
                 </select>
-
-                <button type="submit">Go</button>
+                <button type="submit" style="padding: 10px 15px;">Go</button>
             </form>
         </div>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Item Name</th>
-                <th>Item Price</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in expenses%}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ item.name}}</td>
-                <td>{{ item.price }}</td>
-                <td>
-                    <form action="/delete/{{ item.id}}" method="POST">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor%}
-        </tbody>
-    </table>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="10%">#</th>
+                    <th width="50%">Item</th>
+                    <th width="20%">Price</th>
+                    <th width="20%">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in expenses %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>${{ "%.2f"|format(item.price) }}</td> <td>
+                        <form action="/delete/{{ item.id }}" method="POST" style="margin:0;">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 </body>
-
 </html>
