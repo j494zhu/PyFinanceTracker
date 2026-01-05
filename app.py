@@ -110,11 +110,10 @@ def logout():
 def index():
     if (request.method == 'POST'):
         # frontend post data to backend:
-        item_name = request.form.get('name')
-        item_price = request.form.get('price')
-        item = Expenses(name=item_name, price=float(item_price), user_id=current_user.id)
-
         try:
+            item_name = request.form.get('name')
+            item_price = request.form.get('price')
+            item = Expenses(name=item_name, price=float(item_price), user_id = current_user.id)
             db.session.add(item)
             db.session.commit()
             return redirect('/')
