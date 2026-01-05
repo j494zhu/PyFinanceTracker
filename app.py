@@ -38,6 +38,9 @@ class Expenses(db.Model):
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
+with app.app_context():
+    db.create_all()
+
 def get_expenses():
     if not current_user.is_authenticated:
         return []
@@ -146,6 +149,4 @@ def delete(id):
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
