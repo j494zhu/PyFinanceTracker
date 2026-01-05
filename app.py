@@ -110,15 +110,22 @@ def logout():
 def index():
     if (request.method == 'POST'):
         # frontend post data to backend:
+        item_name = request.form.get('name')
+        item_price = request.form.get('price')
         try:
-            item_name = request.form.get('name')
-            item_price = request.form.get('price')
-            item = Expenses(name=item_name, price=float(item_price), user_id = current_user.id)
+            price = round(float(item_price), 2)
+            if price < 0:
+                return "Price must be a positive number. "
+        except:
+            return "Price must be a valid number. "
+        
+        try:
+            item = Expenses(name=item_name, price=price, user_id=current_user.id)
             db.session.add(item)
             db.session.commit()
             return redirect('/')
-        except:
-            return "There is an error adding your data."
+        except Exception as e:
+            return f'There was an error adding your data: {str(e)}'
     else:
         return render_template('index.html')
     
