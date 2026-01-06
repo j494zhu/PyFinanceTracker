@@ -3,6 +3,7 @@
 <head>
     <title>PyFinance Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -21,10 +22,27 @@
             <input type="text" name="name" placeholder="e.g. Coffee" required>
             
             <label>Price ($):</label>
-            <input type="number" step="0.01" min="0" name="price" placeholder="0.00" required>
+            <input type="number" step="0.001" min="0" name="price" placeholder="0.00" required>
+
+            <label style="margin-top: 10px; display: block;">Category:</label>
+            <select name="category" required style="padding: 5px; margin-bottom: 15px;">
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Education">Education</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Household">Household</option>
+                <option value="Other">Other</option>
+                
+            </select>
 
             <button type="submit">Add Item</button>
         </form>
+
+        <div style="max-width: 400px; margin: 20px auto;">
+            <canvas id="myChart"></canvas>
+        </div>
 
         <h1 style="margin-top: 40px;">History Flow</h1>
 
@@ -45,8 +63,9 @@
             <thead>
                 <tr>
                     <th width="10%">#</th>
-                    <th width="50%">Item</th>
+                    <th width="30%">Item</th>
                     <th width="20%">Price</th>
+                    <th width="20%">Category</th>
                     <th width="20%">Action</th>
                 </tr>
             </thead>
@@ -55,7 +74,9 @@
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ item.name }}</td>
-                    <td>${{ "%.2f"|format(item.price) }}</td> <td>
+                    <td>${{ "%.2f"|format(item.price) }}</td> 
+                    <td>{{ item.category }}</td>
+                    <td>
                         <form action="/delete/{{ item.id }}" method="POST" style="margin:0;">
                             <button type="submit" class="delete-btn">Delete</button>
                         </form>
@@ -65,6 +86,45 @@
             </tbody>
         </table>
     </div>
+    <script>
+        // Get canvas
+        const ctx = document.getElementById('myChart');
 
+        // receive data from Flask
+        const myLabels = {{ c_labels | tojson }};
+        const myValues = {{ c_values | tojson }};
+
+        // draw
+        if (myLabels.length > 0) {
+            new Chart(ctx, {
+                type: 'bar',  //pie饼图, doughnut甜甜圈图, bar柱图
+                data: {
+                    labels: myLabels,
+                    datasets: [{
+                        label: 'Total Amount ($)',
+                        data: myValues,
+                        backgroundColor: [
+                            '#FF6384', 
+                            '#36A2EB', 
+                            '#FFCE56', 
+                            '#4BC0C0', 
+                            '#9966FF', 
+                            '#FF9F40'  
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Expense Distribution' 
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
