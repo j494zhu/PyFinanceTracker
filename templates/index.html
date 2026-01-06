@@ -40,6 +40,21 @@
             <button type="submit">Add Item</button>
         </form>
 
+        <div style="max-width: 400px; margin: 20px auto; text-align: center;">
+            <label>Chart Type: </label>
+            <select id="chartTypeSelector" onchange="updateChartType(this.value)">
+                <option value="doughnut">Doughnut</option>
+                <option value="pie">Pie</option>
+                <option value="bar">Bar</option>
+                <option value="polarArea">Polar Area</option>
+                <option value="radar">Radar</option>
+            </select>
+            
+            <div style="margin-top: 10px;">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+
         <div style="max-width: 400px; margin: 20px auto;">
             <canvas id="myChart"></canvas>
         </div>
@@ -87,43 +102,50 @@
         </table>
     </div>
     <script>
-        // Get canvas
         const ctx = document.getElementById('myChart');
-
-        // receive data from Flask
         const myLabels = {{ c_labels | tojson }};
         const myValues = {{ c_values | tojson }};
 
-        // draw
-        if (myLabels.length > 0) {
-            new Chart(ctx, {
-                type: 'bar',  //pie饼图, doughnut甜甜圈图, bar柱图
-                data: {
-                    labels: myLabels,
-                    datasets: [{
-                        label: 'Total Amount ($)',
-                        data: myValues,
-                        backgroundColor: [
-                            '#FF6384', 
-                            '#36A2EB', 
-                            '#FFCE56', 
-                            '#4BC0C0', 
-                            '#9966FF', 
-                            '#FF9F40'  
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Expense Distribution' 
+        let currentChart = null;
+        function renderChart(type) {
+            // remove old chart instance if exists
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            if (myLabels.length > 0) {
+                currentChart = new Chart(ctx, {
+                    type: type, 
+                    data: {
+                        labels: myLabels,
+                        datasets: [{
+                            label: 'Total Amount ($)',
+                            data: myValues,
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', 
+                                '#4BC0C0', '#9966FF', '#FF9F40', 
+                                '#C9CBCF', '#2C3E50'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Expense Distribution'
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
+        }
+        // set default to doughnut chart
+        renderChart('doughnut');
+        // change chart type
+        function updateChartType(newType) {
+            renderChart(newType);
         }
     </script>
 </body>
