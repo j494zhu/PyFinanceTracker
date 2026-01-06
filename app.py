@@ -6,6 +6,7 @@ from flask import session
 from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user
 from flask_login import login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import func
 
 from datetime import datetime
 
@@ -17,7 +18,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-app.secret_key = "any_random_string_here"
+app.secret_key = "Prof. Roh's credit card password"
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +35,8 @@ class Expenses(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     price = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String, nullable=False, default='Other')
+
     timestamp = db.Column(db.DateTime, default=datetime.now)
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -61,7 +64,16 @@ def get_expenses():
 @app.context_processor
 def inject_data():
     sort_type = session.get('sort', 'time_desc')
-    return dict(expenses=get_expenses(), sort_type=sort_type)
+
+    c_labels = []
+    c_values = []
+    if current_user.is_authenticated:
+        data = db.session.query(Expenses.category, func.sum(Expenses.price))\
+                .filter_by(user_id=current_user.id).group_by(Expenses.category).all()
+        c_labels = [row[0] for row in data]  
+        c_values = [row[1] for row in data] 
+
+    return dict(expenses=get_expenses(), sort_type=sort_type, c_labels=c_labels, c_values=c_values)
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
@@ -112,6 +124,8 @@ def index():
         # frontend post data to backend:
         item_name = request.form.get('name')
         item_price = request.form.get('price')
+        item_category = request.form.get('category')
+        
         try:
             price = round(float(item_price), 2)
             if price < 0:
@@ -120,7 +134,7 @@ def index():
             return "Price must be a valid number. "
         
         try:
-            item = Expenses(name=item_name, price=price, user_id=current_user.id)
+            item = Expenses(name=item_name, price=price, category=item_category, user_id=current_user.id)
             db.session.add(item)
             db.session.commit()
             return redirect('/')
